@@ -31,11 +31,11 @@ job "tracetest" {
 
       config {
         image = "kubeshop/tracetest:v0.2.3"
-        force_pull = true
 
-        entrypoint = [
-          "--config=/app/config/config.yaml",
+        args = [
+          "-config", "/local/config.yaml"
         ]
+
         ports = [
           "tracetest-app",
         ]
@@ -65,7 +65,7 @@ job "tracetest" {
       tls:
         insecure: true
 EOF
-        destination = "/app/config/config.yaml"
+        destination = "/local/config.yaml"
       }
     }
   }
