@@ -9,7 +9,7 @@ job "tracetest" {
     network {
 
       port "tracetest-app" {
-        to = 8888
+        to = 8080
       }
 
     }
@@ -58,7 +58,7 @@ job "tracetest" {
       enabled: false
       measurementId: "G-WP4XXN1FYN"
       secretKey: "QHaq8ZCHTzGzdcRxJ-NIbw"
-    postgresConnString: "host=tracetest-postgresql user=tracetest password=not-secure-database-password  port=5432 sslmode=disable"
+    postgresConnString: "host=postgres.localhost user=tracetest password=not-secure-database-password  port=5432 sslmode=disable"
     
     jaegerConnectionConfig:
       endpoint: jaeger-query:16685

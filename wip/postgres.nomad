@@ -49,22 +49,17 @@ job "app-postgres" {
       }
 
     service {
-      name = "app-postgres"
-      port = "db"
       tags = [
-      "app-postgres",
-      "traefik.enable=true",
-      "traefik.tcp.routers.postgres.rule=HostSNI(`*`)",
-      "traefik.tcp.routers.postgres.entrypoints=postgres",
+        "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)",
+        "traefik.http.routers.postgres.entrypoints=web",
+        "traefik.http.routers.postgres.tls=false",
+        "traefik.enable=true",
       ]
 
-      check {
-        type     = "tcp"
-        port     = "db"
-        interval = "10s"
-        timeout  = "5s"
-        } 
-      }  
+      port = "db"
+
+    }
+
     }
   }
 }
