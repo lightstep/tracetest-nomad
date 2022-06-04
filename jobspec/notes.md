@@ -41,16 +41,16 @@ Add the following:
 
 ```bash
 # Traefik with HTTP and gRPC enabled
-nomad job run wip/traefik.nomad
+nomad job run jobspec/traefik.nomad
 
 # PostgreSQL DB required by Tracetest
-nomad job run wip/postgres.nomad
+nomad job run jobspec/postgres.nomad
 
 # Tracetest
-nomad job run wip/tracetest.nomad
+nomad job run jobspec/tracetest.nomad
 
 # Jaeger tracing backend, supported by Tracetest
-nomad job run wip/jaeger.nomad
+nomad job run jobspec/jaeger.nomad
 ```
 
 3. Check the PostgreSQL connection
