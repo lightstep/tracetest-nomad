@@ -1,8 +1,10 @@
 # Notes
 
+**Assumption:** You have a Nomad/Vault/Consul HashiCorp environment running in a DC or locally using [HashiQube](https://github.com/avillela/hashiqube) set up. These jobspecs are set up assuming you are running Nomad locally via HashiQube. Please update accordingly for a DC setup.
+
 ## Jobspec Template
 
-Notes I use to create the Tracetest jobspec.
+Notes I used to create the Tracetest jobspec.
 
 1. Render helm charts:
 
