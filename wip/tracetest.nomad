@@ -61,7 +61,7 @@ job "tracetest" {
     postgresConnString: "host=postgres.localhost user=tracetest password=not-secure-database-password  port=5432 sslmode=disable"
     
     jaegerConnectionConfig:
-      endpoint: jaeger-query:16685
+      endpoint: jaeger-grpc.localhost:16685
       tls:
         insecure: true
 EOF

@@ -1,5 +1,7 @@
 # Notes
 
+## Jobspec Template
+
 Notes I use to create the Tracetest jobspec.
 
 1. Render helm charts:
@@ -20,18 +22,40 @@ echo bEtjeTdlWHRIdg== | base64 -d
 echo bm90LXNlY3VyZS1kYXRhYmFzZS1wYXNzd29yZA== | base64 -d
 ```
 
-3. Update `/etc/hosts`
+## Running the Jobspecs
+
+1. Update `/etc/hosts`
 
 Add the following:
 
 ```text
 192.168.56.192  tracetest.localhost
 192.168.56.192  postgres.localhost
+192.168.56.192  jaeger-ui.localhost
+192.168.56.192  jaeger-grpc.localhost
 ```
 
-4. Install `postgres` on Mac using Homebrew so we have access to the `pg_isready` CLI.
+2. Deploy to Nomad
 
-Ref [here](https://stackoverflow.com/a/46703723).
+```bash
+# Traefik with HTTP and gRPC enabled
+nomad job run wip/traefik.nomad
+
+# PostgreSQL DB required by Tracetest
+nomad job run wip/postgres.nomad
+
+# Tracetest
+nomad job run wip/tracetest.nomad
+
+# Jaeger tracing backend, supported by Tracetest
+nomad job run wip/jaeger.nomad
+```
+
+3. Check the PostgreSQL connection
+
+Install `postgres` on Mac using Homebrew so we have access to the `pg_isready` CLI, as per [these instructions](https://stackoverflow.com/a/46703723).
+
+>**NOTE:** This downloads and installs PostgreSQL on your Mac, but doesn't run the service. We just want to use the `pg_isready` util to make sure that we can connect to our DB.
 
 ```bash
 brew install postgres
@@ -41,8 +65,21 @@ brew tap homebrew/services
 brew services list
 ```
 
-5. Check postgres connection
+Now we can test our connection. More info [here](https://stackoverflow.com/a/44496546).
 
 ```bash
 pg_isready -d tracetest -h postgres.localhost -p 5432 -U tracetest
 ```
+
+4. Make sure tha Jaeger is up and running
+
+Check gRPC endpoint (used by Tracetest)
+```bash
+grpcurl --plaintext jaeger-grpc.localhost:7233 list
+```
+
+Jaeger UI accessed here: `http://jaeger-ui.localhost`
+
+5. Make sure that Tracetest is up and running
+
+Tracetest UI accessed here: `http://tracetest.localhost`
