@@ -43,6 +43,8 @@ Add the following:
 
 3. Deploy to Nomad
 
+Please ensure that you deploy in this order.
+
 ```bash
 # Traefik with HTTP and gRPC enabled
 nomad job run jobspec/traefik.nomad
@@ -50,14 +52,17 @@ nomad job run jobspec/traefik.nomad
 # PostgreSQL DB required by Tracetest
 nomad job run jobspec/postgres.nomad
 
-# Tracetest
-nomad job run jobspec/tracetest.nomad
-
 # Jaeger tracing backend, supported by Tracetest
 nomad job run jobspec/jaeger.nomad
 
 # Go server app
 nomad job run jobspec/go-server.nomad
+
+# Tracetest
+nomad job run jobspec/tracetest.nomad
+
+# OTel Collector (start this up AFTER starting Jaeger)
+nomad job run jobspec/otel-collector.nomad
 ```
 
 4. Check the PostgreSQL connection
