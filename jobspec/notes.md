@@ -2,7 +2,7 @@
 
 **Assumption:** You have a Nomad/Vault/Consul HashiCorp environment running in a DC or locally using [HashiQube](https://github.com/avillela/hashiqube) set up. These jobspecs are set up assuming you are running Nomad locally via HashiQube. Please update accordingly for a DC setup.
 
-## Jobspec Template
+## Converstion to Jobspec Template
 
 I used the Helm chart output to create the Tracetest jobspec.
 
@@ -105,27 +105,67 @@ Tracetest UI accessed here: `http://tracetest.localhost`
 
 Open a browser: `http://go-server.localhost`
 
-## Testing
+## Testing the Setup
 
-****WORK IN PROGRESS - DOES NOT WORK YET****
+To test this setup, you must first send a trace to Jaeger. We do that by calling our API endpont, the sample Go server app. Tracetest will then pull traces related to that endpoint from Jaeger.
 
-You can try out Tracetest against the [Pokeshop example](https://github.com/kubeshop/pokeshop). You can either [build and run yourself](https://github.com/kubeshop/pokeshop/blob/master/docs/installing.md), or you can hit up the running example's API [here](https://pokeapi.co/api/v2).
+
+1. Call the API endpoint
+
+```bash
+curl http://go-server.localhost
+```
+
+Check that the trace shows up in Jaeger. It will show up under service name `registration-server`.
+
+![jaeger-traces](../images/jaeger_traces.png)
+
+2. Create the test
+
+Click the `Create Test` button on the top right, which will bring up the following:
+
+![create-test](../images/create_test.png)
+
+Fill out the following details:
+
+* Request Type: `GET`
+* URL: `http://go-server.localhost`
+* Name: `Go Server`
+
+Click `Create` when done.
+
+![test-creation](../images/test_creation.png)
+
+
+If all goes well, you'll see something like this:
+
+![run-test](../images/run_test.png)
+
+Congrats! Tracetest is running on Nomad!
 
 ## Troubleshooting
 
-Login
+You can troubleshoot Tracetest by querying the database.
+
+>**NOTE:** The `psql` command-line tool is available when you install PostgreSQL as per Step 4 in `Running the Jobspecs`.
+
+Log into the database. You will be prompted for the password, which is `not-secure-database-password`
 
 ```bash
 psql -h postgres.localhost -d tracetest -U tracetest -W
 ```
 
-Inspect runs -> Get run ID from `stdout` log. Sample log message:
+Now you can run queries.
+
+Inspect runs.
+
+**NOTE:** To get run the ID from `stdout` Tracetest log. Sample log message:
 
 ```
 2022/06/07 19:19:06 GET /api/tests/79e74617-e709-4113-a5a6-b334140c358e/run/dbefe9f9-ba90-421c-bac3-436165a99d3d GetTestRun 1.248909ms
 ```
 
-The API endpoint is:
+Where:
 
 ```
 /api/tests/{test_id}/run/{run_id}
@@ -135,4 +175,18 @@ Now you can run the query:
 
 ```sql
 select run from runs where id = '<run_id>';
+```
+
+## Gotchas
+
+Be sure to start the Jaeger job before the OTel Collector and Tracetest jobs.
+
+Sometimes Nomad will cache your jobs, so if it starts acting up, purge all jobs and re-deploy.
+
+Note: purge order doesn't matter. Redeploy order does.
+
+```bash
+nomad job stop -purge tracetest
+nomad job stop -purge jaeger
+nomad job stop -purge otel-collector
 ```
