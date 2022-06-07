@@ -30,7 +30,7 @@ job "go-server" {
       driver = "docker"
       
       config {
-        image = "ghcr.io/avillela/otel-example-server:1.0.1"
+        image = "ghcr.io/avillela/go-sample-server:1.0.0"
         force_pull = true
         image_pull_timeout = "20m"
         ports = [
