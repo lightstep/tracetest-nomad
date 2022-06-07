@@ -2,9 +2,9 @@
 
 **Assumption:** You have a Nomad/Vault/Consul HashiCorp environment running in a DC or locally using [HashiQube](https://github.com/avillela/hashiqube) set up. These jobspecs are set up assuming you are running Nomad locally via HashiQube. Please update accordingly for a DC setup.
 
-## Jobspec Template
+## Converstion to Jobspec Template
 
-Notes I used to create the Tracetest jobspec.
+I used the Helm chart output to create the Tracetest jobspec.
 
 1. Render helm charts:
 
@@ -26,7 +26,9 @@ echo bm90LXNlY3VyZS1kYXRhYmFzZS1wYXNzd29yZA== | base64 -d
 
 ## Running the Jobspecs
 
-1. Update `/etc/hosts`
+1. Start up [hashiqube](https://github.com/avillela/hashiqube)
+
+2. Update `/etc/hosts`
 
 Add the following:
 
@@ -35,9 +37,13 @@ Add the following:
 192.168.56.192  postgres.localhost
 192.168.56.192  jaeger-ui.localhost
 192.168.56.192  jaeger-grpc.localhost
+192.168.56.192  jaeger-proto.localhost
+192.168.56.192  go-server.localhost
 ```
 
-2. Deploy to Nomad
+3. Deploy to Nomad
+
+Please ensure that you deploy in this order.
 
 ```bash
 # Traefik with HTTP and gRPC enabled
@@ -46,14 +52,20 @@ nomad job run jobspec/traefik.nomad
 # PostgreSQL DB required by Tracetest
 nomad job run jobspec/postgres.nomad
 
+# Jaeger tracing backend, supported by Tracetest
+nomad job run jobspec/jaeger.nomad
+
+# Go server app
+nomad job run jobspec/go-server.nomad
+
 # Tracetest
 nomad job run jobspec/tracetest.nomad
 
-# Jaeger tracing backend, supported by Tracetest
-nomad job run jobspec/jaeger.nomad
+# OTel Collector (start this up AFTER starting Jaeger)
+nomad job run jobspec/otel-collector.nomad
 ```
 
-3. Check the PostgreSQL connection
+4. Check the PostgreSQL connection
 
 Install `postgres` on Mac using Homebrew so we have access to the `pg_isready` CLI, as per [these instructions](https://stackoverflow.com/a/46703723).
 
@@ -73,15 +85,108 @@ Now we can test our connection. More info [here](https://stackoverflow.com/a/444
 pg_isready -d tracetest -h postgres.localhost -p 5432 -U tracetest
 ```
 
-4. Make sure tha Jaeger is up and running
+5. Make sure tha Jaeger is up and running
 
 Check gRPC endpoint (used by Tracetest)
+
 ```bash
 grpcurl --plaintext jaeger-grpc.localhost:7233 list
 ```
 
+>**NOTE:** We exposed port `7233` in Traefik, which maps to Jaeger gRPC container port `16685`.
+
 Jaeger UI accessed here: `http://jaeger-ui.localhost`
 
-5. Make sure that Tracetest is up and running
+6. Make sure that Tracetest is up and running
 
 Tracetest UI accessed here: `http://tracetest.localhost`
+
+7. Access the sample app
+
+Open a browser: `http://go-server.localhost`
+
+## Testing the Setup
+
+To test this setup, you must first send a trace to Jaeger. We do that by calling our API endpont, the sample Go server app. Tracetest will then pull traces related to that endpoint from Jaeger.
+
+
+1. Call the API endpoint
+
+```bash
+curl http://go-server.localhost
+```
+
+Check that the trace shows up in Jaeger. It will show up under service name `registration-server`.
+
+![jaeger-traces](../images/jaeger_traces.png)
+
+2. Create the test
+
+Click the `Create Test` button on the top right, which will bring up the following:
+
+![create-test](../images/create_test.png)
+
+Fill out the following details:
+
+* Request Type: `GET`
+* URL: `http://go-server.localhost`
+* Name: `Go Server`
+
+Click `Create` when done.
+
+![test-creation](../images/test_creation.png)
+
+
+If all goes well, you'll see something like this:
+
+![run-test](../images/run_test.png)
+
+Congrats! Tracetest is running on Nomad!
+
+## Troubleshooting
+
+You can troubleshoot Tracetest by querying the database.
+
+>**NOTE:** The `psql` command-line tool is available when you install PostgreSQL as per Step 4 in `Running the Jobspecs`.
+
+Log into the database. You will be prompted for the password, which is `not-secure-database-password`
+
+```bash
+psql -h postgres.localhost -d tracetest -U tracetest -W
+```
+
+Now you can run queries.
+
+Inspect runs.
+
+**NOTE:** To get run the ID from `stdout` Tracetest log. Sample log message:
+
+```
+2022/06/07 19:19:06 GET /api/tests/79e74617-e709-4113-a5a6-b334140c358e/run/dbefe9f9-ba90-421c-bac3-436165a99d3d GetTestRun 1.248909ms
+```
+
+Where:
+
+```
+/api/tests/{test_id}/run/{run_id}
+```
+
+Now you can run the query:
+
+```sql
+select run from runs where id = '<run_id>';
+```
+
+## Gotchas
+
+Be sure to start the Jaeger job before the OTel Collector and Tracetest jobs.
+
+Sometimes Nomad will cache your jobs, so if it starts acting up, purge all jobs and re-deploy.
+
+Note: purge order doesn't matter. Redeploy order does.
+
+```bash
+nomad job stop -purge tracetest
+nomad job stop -purge jaeger
+nomad job stop -purge otel-collector
+```

@@ -14,10 +14,25 @@ job "jaeger" {
         to = 14268
       }
 
+      port "jaeger-proto" {
+        to = 14250
+      }
+
       port "jaeger-grpc" {
         to = 16685
       }
 
+    }
+
+    service {
+      name = "jaeger-proto"
+      tags = [
+        "traefik.tcp.routers.jaeger-proto.rule=HostSNI(`*`)",
+        "traefik.tcp.routers.jaeger-proto.entrypoints=grpc",
+        "traefik.enable=true",
+      ]        
+
+      port = "jaeger-proto"
     }
 
     service {
@@ -44,16 +59,12 @@ job "jaeger" {
     }
 
 
-    // service {
-    //   name = "jaeger"
-    //   port = "[[ $vars.http_ui_port ]]"
-    // }
-
     task "jaeger" {
       driver = "docker"
 
       config {
         image = "jaegertracing/all-in-one:1.35.1"
+        // image = "jaegertracing/all-in-one:1.33"
         ports = ["jaeger-ui", "jaeger-collector"]
       }
 
