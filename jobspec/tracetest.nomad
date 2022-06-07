@@ -30,7 +30,7 @@ job "tracetest" {
       driver = "docker"
 
       config {
-        image = "kubeshop/tracetest:v0.2.3"
+        image = "kubeshop/tracetest:v0.4.3"
 
         args = [
           "-config", "/local/config.yaml"
@@ -53,7 +53,7 @@ job "tracetest" {
       template {
         data   = <<EOF
 
-    maxWaitTimeForTrace: 10s
+    maxWaitTimeForTrace: 100s
     googleAnalytics:
       enabled: false
       measurementId: "G-WP4XXN1FYN"
@@ -61,7 +61,7 @@ job "tracetest" {
     postgresConnString: "host=postgres.localhost user=tracetest password=not-secure-database-password  port=5432 sslmode=disable"
     
     jaegerConnectionConfig:
-      endpoint: jaeger-grpc.localhost:16685
+      endpoint: jaeger-grpc.localhost:7233
       tls:
         insecure: true
 EOF

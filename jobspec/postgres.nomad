@@ -1,9 +1,9 @@
-job "app-postgres" {
+job "postgres" {
 
   datacenters = ["dc1"]
   type        = "service"
 
-  group "app-postgres" {
+  group "postgres" {
     restart {
       attempts = 10
       interval = "5m"
@@ -18,7 +18,7 @@ job "app-postgres" {
       }
     }
 
-    task "app-postgres" {
+    task "postgres" {
       driver = "docker"
 
       config {
