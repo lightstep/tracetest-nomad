@@ -60,11 +60,11 @@ This conversion was started by using the Tracetest Helm chart output to create t
     # Go server app
     nomad job run jobspec/go-server.nomad
 
+    # OTel Collector
+    nomad job run jobspec/otel-collector.nomad
+
     # Tracetest
     nomad job run jobspec/tracetest.nomad
-
-    # OTel Collector (start this up AFTER starting Jaeger)
-    nomad job run jobspec/otel-collector.nomad
     ```
 
 4. Check the PostgreSQL connection
@@ -185,13 +185,13 @@ You can troubleshoot Tracetest by querying the database.
 
 ## Gotchas
 
-Be sure to start the Jaeger job before the OTel Collector and Tracetest jobs.
-
 Sometimes the OTel Collector has trouble sending data to Jaeger, even though everything appears to be up and running.
 
-Sometimes, even when data is sent to Jaeger, Tracetest can't seem to find the traces. 
+Sometimes, even when data is sent to Jaeger, Tracetest can't seem to find the traces.
 
-If you encounter either of these scenarios, purge the Jaeger, Tracetest, and OTel Collector jobs and re-deploy as per below:
+>**NOTE:** I have no idea why this happens, but this does seem to fix things. You may need to re-try a few times. I would love to know why it can be finicky like this.
+
+If you encounter either of the above scenarios, purge the Jaeger, Tracetest, and OTel Collector jobs and re-deploy as per below:
 
 1. Purge jobs
 
