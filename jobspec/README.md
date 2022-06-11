@@ -57,7 +57,7 @@ This conversion was started by using the Tracetest Helm chart output to create t
     # Jaeger tracing backend, supported by Tracetest
     nomad job run jobspec/jaeger.nomad
 
-    # Go server app
+    # Go server app (this one can take a while to deploy)
     nomad job run jobspec/go-server.nomad
 
     # OTel Collector
@@ -66,6 +66,8 @@ This conversion was started by using the Tracetest Helm chart output to create t
     # Tracetest
     nomad job run jobspec/tracetest.nomad
     ```
+    
+    >**NOTE:** If you run into issues deploying any of these, see [Gotchas](#gotchas) section for other gotchas and how to troubleshoot them.
 
 4. Check the PostgreSQL connection
 
@@ -184,6 +186,12 @@ You can troubleshoot Tracetest by querying the database.
     ```
 
 ## Gotchas
+
+### Deploying the Go Server
+
+The Go Server app can take a while to deploy and sometimes fails to pull the image. If that happens, please re-try.
+
+### Communications between OTel Collector and Jaeger and/or Jaeger and Tracetest
 
 Sometimes the OTel Collector has trouble sending data to Jaeger, even though everything appears to be up and running.
 
